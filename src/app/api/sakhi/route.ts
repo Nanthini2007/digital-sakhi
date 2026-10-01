@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { TRUSTED_SERVICES, findServiceByQuery } from "@/data/schemes";
 import { checkInputSafety, SAFETY_SYSTEM_PROMPT } from "@/lib/safety";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export interface SakhiApiResponse {
   language: "ta" | "en";
@@ -27,6 +28,12 @@ export interface SakhiApiResponse {
 
 export async function POST(req: NextRequest) {
   try {
+    const identifier = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "anonymous";
+    const rateCheck = checkRateLimit(identifier);
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please wait a moment and try again." }, { status: 429 });
+    }
+
     const body = await req.json();
     const {
       userText = "",
