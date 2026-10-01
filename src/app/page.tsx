@@ -255,7 +255,7 @@ export default function SakhiHome() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: sessionId || "anonymous",
+          sessionId: sessionIdRef.current,
           serviceId: activeResponse.serviceId,
           currentStep,
           language,
